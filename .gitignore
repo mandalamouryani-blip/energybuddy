@@ -1,0 +1,8 @@
+﻿node_modules/
+.env
+.vscode/
+npm-debug.log*
+
+# Ignore Google Cloud service account keys
+serviceAccountKey.json
+backend/serviceAccountKey.json

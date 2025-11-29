@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>EnergyBuddy - Login</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #a8edea, #fed6e3);
+      /* ↑ pastel aqua to light pink for softness — you can replace with green tones below */
+      /* e.g. background: linear-gradient(135deg, #c8e6c9, #b2dfdb); */
+      overflow: hidden;
+      color: #333;
+    }
+
+    .login-box {
+      background: rgba(255, 255, 255, 0.85);
+      padding: 50px 60px;
+      border-radius: 20px;
+      text-align: center;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(5px);
+    }
+
+    h2 {
+      font-size: 2rem;
+      margin-bottom: 25px;
+      color: #00796b;
+    }
+
+    input {
+      width: 280px;
+      padding: 12px;
+      margin: 12px 0;
+      border: 1px solid #aaa;
+      border-radius: 25px;
+      background: rgba(255, 255, 255, 0.9);
+      color: #333;
+      font-size: 1rem;
+      text-align: center;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    input:focus {
+      border-color: #00c853;
+      box-shadow: 0 0 10px rgba(0, 200, 83, 0.3);
+    }
+
+    button {
+      width: 300px;
+      padding: 12px;
+      border: none;
+      border-radius: 25px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: #fff;
+      background: linear-gradient(90deg, #00c853, #64dd17);
+      transition: 0.3s;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      background: linear-gradient(90deg, #00e676, #76ff03);
+      box-shadow: 0 0 15px rgba(0, 255, 128, 0.5);
+    }
+
+    pre {
+      color: #444;
+      font-size: 0.9rem;
+      margin-top: 15px;
+      background: rgba(255, 255, 255, 0.6);
+      padding: 10px;
+      border-radius: 10px;
+      overflow-x: auto;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <h2>Login to EnergyBuddy ⚡</h2>
+    <form id="f">
+      <input id="email" type="email" placeholder="Enter your email" required><br>
+      <input id="password" type="password" placeholder="Enter your password" required><br>
+      <button type="submit">Login</button>
+    </form>
+    <pre id="out"></pre>
+  </div>
+
+  <script type="module">
+    import { auth, signInWithEmailAndPassword } from './firebase/firebase_options.js';
+
+    const API = 'http://localhost:3000';
+    const out = document.getElementById('out');
+
+    document.getElementById('f').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+      out.innerText = 'Logging in...';
+
+      try {
+        // 1. Sign in with Firebase on the client
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        out.innerText = `Firebase login successful for ${user.email}.\nRequesting app session...`;
+
+        // 2. Get the Firebase ID token
+        const idToken = await user.getIdToken();
+
+        // 3. Send the ID token to our backend to get our application's JWT
+        const res = await fetch(API + '/api/firebase-login', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ token: idToken })
+        });
+        const json = await res.json();
+        out.innerText = JSON.stringify(json, null, 2);
+
+        if (res.ok && json.token) {
+          localStorage.setItem('userEmail', email);
+          localStorage.setItem('app_token', json.token); // Store our app's JWT
+          alert('Login successful!');
+          location.href = 'dashboard.html';
+        }
+      } catch (err) {
+        out.innerText = `Error: ${err.code}\n${err.message}`;
+      }
+    });
+  </script>
+</body>
+</html>
