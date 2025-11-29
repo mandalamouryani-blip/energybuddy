@@ -71,7 +71,7 @@
     async function startReminders() {
       const email = localStorage.getItem("userEmail");
       if (!email) return alert("User not logged in!");
-      await fetch("http://localhost:3000/start-reminders", {
+      await fetch("https://energybuddy.onrender.com/start-reminders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email })
@@ -83,7 +83,7 @@
     async function stopReminders() {
       const email = localStorage.getItem("userEmail");
       if (!email) return alert("User not logged in!");
-      await fetch("http://localhost:3000/stop-reminders", {
+      await fetch("https://energybuddy.onrender.com/stop-reminders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email })

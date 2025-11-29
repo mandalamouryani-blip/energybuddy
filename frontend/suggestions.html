@@ -31,7 +31,7 @@
       const reminder_time = document.getElementById("reminder_time").value;
       const msg = document.getElementById("msg");
 
-      const res = await fetch("http://localhost:3000/add-reminder", {
+      const res = await fetch("https://energybuddy.onrender.com/add-reminder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, message, reminder_time })
