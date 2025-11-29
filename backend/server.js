@@ -3,8 +3,8 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
-const { db, auth } = require("./src/config/firebase"); // Firebase config
-const { sendEmail, transporter } = require("./mailer"); // Mailer module
+const { db, auth } = require("./src/config/firebase");
+const { sendEmail } = require("./mailer"); // Mailer module for SendGrid
 
 const app = express();
 
@@ -113,26 +113,21 @@ app.post("/send-reminder", async (req, res) => {
     const { email, subject = "EnergyBuddy Reminder", message } = req.body;
     if (!email || !message)
       return res.status(400).json({ error: "email & message required" });
-
-    if (!transporter) {
-      return res
-        .status(500)
-        .json({ error: "Email transporter not configured on server" });
-    }
-
+ 
+    // The mailOptions object is now simplified for the SendGrid `sendEmail` function
     const mailOptions = {
-      from: `"EnergyBuddy" <${process.env.EMAIL_USER}>`,
       to: email,
       subject,
       text: message,
       html: message.replace(/\n/g, "<br>"),
     };
-
-    const info = await sendEmail(mailOptions);
+ 
+    // The `sendEmail` function from mailer.js will throw on failure, which is caught below.
+    await sendEmail(mailOptions);
     console.log(
-      `📩 Reminder sent to ${email} — id: ${info.messageId || "(no-id)"}`
+      `📩 Reminder email queued for sending to ${email}`
     );
-    res.json({ ok: true, messageId: info.messageId || null });
+    res.json({ ok: true, message: "Email sent successfully." });
   } catch (err) {
     console.error("❌ Send reminder error:", err.message);
     res
