@@ -1,46 +1,37 @@
 // backend/mailer.js
 require("dotenv").config();
-const nodemailer = require("nodemailer");
 
-let transporter = null;
+const sgMail = require("@sendgrid/mail");
 
-// Only configure transporter if credentials exist
-if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-  transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS, // Google App Password ONLY
-    },
-  });
-
-  // Soft verification (Render-safe)
-  transporter.verify((error, success) => {
-    if (error) {
-      console.warn(
-        "⚠️ Mailer verification failed (common on Render, emails may still work):",
-        error.message
-      );
-    } else {
-      console.log("✅ Mailer ready.");
-    }
-  });
-} else {
-  console.warn(
-    "⚠️ EMAIL_USER or EMAIL_PASS missing. Email functionality disabled."
-  );
+// Load SendGrid API key from your Render env
+if (!process.env.myEmailKey) {
+  console.warn("⚠️ SendGrid API key (myEmailKey) missing. Email disabled.");
 }
 
+sgMail.setApiKey(process.env.myEmailKey);
+
 /**
- * Sends an email using transporter
+ * Sends an email using SendGrid Web API.
+ * @param {Object} mailOptions - Email details
+ * @param {string} mailOptions.to - Recipient
+ * @param {string} mailOptions.from - Verified sender email
+ * @param {string} mailOptions.subject - Email subject
+ * @param {string} mailOptions.text - Email plain text
+ * @param {string} [mailOptions.html] - Optional HTML version
  */
-const sendEmail = (mailOptions) => {
-  if (!transporter) {
-    return Promise.reject(
-      new Error("Email transporter is not configured properly.")
-    );
+const sendEmail = async (mailOptions) => {
+  try {
+    if (!process.env.myEmailKey) {
+      throw new Error("SendGrid API key not configured.");
+    }
+
+    await sgMail.send(mailOptions);
+    console.log("📨 Email sent successfully.");
+    return true;
+  } catch (error) {
+    console.error("❌ Error sending email:", error.message);
+    throw error;
   }
-  return transporter.sendMail(mailOptions);
 };
 
-module.exports = { sendEmail, transporter };
+module.exports = { sendEmail };
